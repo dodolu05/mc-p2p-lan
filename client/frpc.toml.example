@@ -1,0 +1,43 @@
+# frp 客户端配置模板 —— 给「不支持局域网联机」的游戏做兜底穿透
+# 用法：改好下面几行，放到 frpc 同目录，执行 ./frpc -c frpc.toml
+#
+# 场景：房主本机开着游戏服务（比如 MC 监听 25565），
+#       朋友直接连「服务器公网IP:25565」就能进，不需要装 EasyTier。
+
+serverAddr = "服务器公网IP"
+serverPort = 7000
+
+auth.method = "token"
+auth.token = "服务端 connect.txt 里的 frp 令牌"
+
+# ===== Minecraft Java 版 =====
+[[proxies]]
+name = "mc-java"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 25565
+remotePort = 25565
+
+# ===== Minecraft 基岩版（默认 UDP 19132）=====
+# [[proxies]]
+# name = "mc-bedrock"
+# type = "udp"
+# localIP = "127.0.0.1"
+# localPort = 19132
+# remotePort = 19132
+
+# ===== 泰拉瑞亚（默认 7777）=====
+# [[proxies]]
+# name = "terraria"
+# type = "tcp"
+# localIP = "127.0.0.1"
+# localPort = 7777
+# remotePort = 7777
+
+# ===== 饥荒联机版（默认 10999，房主需开专用服）=====
+# [[proxies]]
+# name = "dst"
+# type = "udp"
+# localIP = "127.0.0.1"
+# localPort = 10999
+# remotePort = 10999

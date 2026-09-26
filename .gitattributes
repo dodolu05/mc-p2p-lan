@@ -1,0 +1,5 @@
+# 脚本必须保持 LF —— CRLF 会让 bash 报 bad interpreter: /usr/bin/env bash^M
+*.sh   text eol=lf
+*.ps1  text eol=crlf
+*.toml text eol=lf
+*.md   text eol=lf

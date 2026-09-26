@@ -1,0 +1,6 @@
+connect.txt
+*.log
+*.log.out
+*.log.err
+.DS_Store
+Thumbs.db

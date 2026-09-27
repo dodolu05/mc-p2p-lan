@@ -1,4 +1,4 @@
-# mc-p2p-lan —— 一套脚本搞定异地游戏联机
+# frp-p2p-lan —— 一套脚本搞定异地游戏联机
 
 用 **EasyTier 虚拟局域网 + frp 穿透**，让天南海北的朋友像坐在同一个宿舍里一样联机。
 Minecraft、泰拉瑞亚、饥荒、CS…… 凡是支持「局域网联机」的游戏都能用。
@@ -7,7 +7,7 @@ Minecraft、泰拉瑞亚、饥荒、CS…… 凡是支持「局域网联机」�
 **不想看教程？把下面这个链接贴给你在用的 AI 工具（WorkBuddy / Cursor / Claude / Codex 都行），它会一步步帮你装好：**
 
 ```
-https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/PROMPT.md
+https://raw.githubusercontent.com/dodolu05/frp-p2p-lan/main/PROMPT.md
 ```
 
 ---
@@ -32,7 +32,7 @@ https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/PROMPT.md
 控制台 → 找到你的云服务器 → 「发送命令 / 云助手」（轻量应用服务器叫「命令助手」）→ 命令类型选 **Shell** → 粘贴下面这行 → 执行：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/server/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/dodolu05/frp-p2p-lan/main/server/install.sh | sudo bash
 ```
 
 图文版见 [`docs/aliyun-cloud-assistant.md`](docs/aliyun-cloud-assistant.md)。
@@ -40,10 +40,10 @@ curl -fsSL https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/server/ins
 **方式 B：SSH 上去执行**（任何云厂商都通用）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/server/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/dodolu05/frp-p2p-lan/main/server/install.sh | sudo bash
 ```
 
-跑完会打印一张**联机邀请卡**（网络名、密钥、中继地址），也存在服务器上的 `/opt/mc-p2p-lan/connect.txt`。
+跑完会打印一张**联机邀请卡**（网络名、密钥、中继地址），也存在服务器上的 `/opt/frp-p2p-lan/connect.txt`。
 
 > 只想先用官方公共中继白嫖一台服务器都不买？可以，但那属于另一条路线，本文不展开——
 > 让朋友各自装 EasyTier 客户端、公共服务器填 `tcp://public.easytier.cn:11010` 也能组网，稳定性自己承担。
@@ -83,14 +83,14 @@ curl -fsSL https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/server/ins
 Windows 一定要用**管理员** PowerShell：
 
 ```powershell
-iex (irm https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/client/join-windows.ps1)
+iex (irm https://raw.githubusercontent.com/dodolu05/frp-p2p-lan/main/client/join-windows.ps1)
 Join-Lan -Name "<网络名>" -Secret "<密钥>" -Peer "tcp://<服务器IP>:11020"
 ```
 
 Linux / macOS：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/client/join-linux.sh | sudo bash -s -- \
+curl -fsSL https://raw.githubusercontent.com/dodolu05/frp-p2p-lan/main/client/join-linux.sh | sudo bash -s -- \
   --name "<网络名>" --secret "<密钥>" --peer "tcp://<服务器IP>:11020"
 ```
 
@@ -121,7 +121,7 @@ ping 10.145.0.x     # 先互相 ping 一下，通了就说明组网成功
 | 朋友客户端连不上 | 先查服务器 `11020` 的 TCP 和 UDP 都放行了没；再核对三框有没有抄错（网络名/密钥有一个字不同都进不去） |
 | 连上了但看不到对方 | 看两端虚拟 IP 是不是同网段（都是 `10.145.0.x`）；安卓端偶尔要下拉刷新节点列表 |
 | ping 不通 | Windows 端确认客户端是以管理员运行的；再查安全组 |
-| 服务起不来 | `journalctl -u mc-p2p-lan-easytier -n 50` |
+| 服务起不来 | `journalctl -u frp-p2p-lan-easytier -n 50` |
 | 延迟高 | P2P 没打成功、走了中转。确认 UDP 放行，或换个离大家都近的服务器地域 |
 | GitHub 下载慢 | 脚本内置 4 个国内镜像，会自动切换，不用管 |
 | 想重装 | 服务端 `--uninstall`；Windows `Join-Lan -Uninstall` |

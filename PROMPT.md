@@ -2,7 +2,7 @@
 
 > 把本文件的链接贴给任意 AI 编程/运维工具（WorkBuddy、Cursor、Claude、Codex 等），
 > 它读完就能帮你把 MC / P2P 游戏联机环境一步搭好。
-> 原始链接：`https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/PROMPT.md`
+> 原始链接：`https://raw.githubusercontent.com/dodolu05/frp-p2p-lan/main/PROMPT.md`
 
 ## 0. 最重要的原则：朋友侧零命令
 
@@ -30,7 +30,7 @@
 ### 2.2 执行（一条命令，非交互）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/server/install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/dodolu05/frp-p2p-lan/main/server/install.sh | sudo bash
 ```
 
 可选参数（一般不填，脚本自动生成随机网络名和密钥）：
@@ -40,7 +40,7 @@ curl -fsSL https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/server/ins
 
 脚本会做：下载 EasyTier 2.6.4 + frp 0.71.0（GitHub 不通自动切国内镜像）→
 生成随机网络名/密钥 → 写 systemd 并设开机自启 → 部署联机管理台和 frp 面板 →
-打印并存盘 `/opt/mc-p2p-lan/connect.txt` **联机邀请卡**。
+打印并存盘 `/opt/frp-p2p-lan/connect.txt` **联机邀请卡**。
 
 ### 2.3 必须让用户自己确认：放行安全组端口
 
@@ -55,7 +55,7 @@ curl -fsSL https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/server/ins
 
 邀请卡分两部分，AI 要帮用户拆清楚：
 - **上半部分（GUI 邀请卡）**：网络名称 / 网络密钥 / 接入地址 `tcp://服务器IP:11020`，
-  连同零命令图文指南一起转发给朋友：`https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/GUIDE_FOR_PLAYERS.md`
+  连同零命令图文指南一起转发给朋友：`https://raw.githubusercontent.com/dodolu05/frp-p2p-lan/main/GUIDE_FOR_PLAYERS.md`
 - **下半部分（排障信息）**：frp 兜底端口、面板口令、端口清单等，只给房主自己留着，别外发
 
 ## 3. 分支 B：加入网络（所有联机的人，默认走 GUI）
@@ -82,13 +82,13 @@ AI 在这一步的职责：引导用户核对字符、解释每个框对应邀�
 
 ```powershell
 # Windows（必须管理员 PowerShell）
-iex (irm https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/client/join-windows.ps1)
+iex (irm https://raw.githubusercontent.com/dodolu05/frp-p2p-lan/main/client/join-windows.ps1)
 Join-Lan -Name "<网络名>" -Secret "<密钥>" -Peer "tcp://<服务器IP>:11020"
 ```
 
 ```bash
 # Linux / macOS
-curl -fsSL https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/client/join-linux.sh | sudo bash -s -- \
+curl -fsSL https://raw.githubusercontent.com/dodolu05/frp-p2p-lan/main/client/join-linux.sh | sudo bash -s -- \
   --name "<网络名>" --secret "<密钥>" --peer "tcp://<服务器IP>:11020"
 ```
 
@@ -115,8 +115,8 @@ Windows 防火墙若拦 MC：允许 `javaw.exe` 通过公用+专用网络。
 |------|-------------|
 | 朋友客户端连不上 | 三行有一字抄错（最常见）；或 11020 TCP+UDP 没放行 |
 | 连上但看不到节点/对方 | 等 10 秒或刷新节点列表；确认双方虚拟 IP 同网段 |
-| 服务起不来 | `journalctl -u mc-p2p-lan-easytier -n 50` |
-| 下载失败 | 脚本内置 4 个国内镜像自动切换；仍失败手动放 release 到 `/opt/mc-p2p-lan/bin/` |
+| 服务起不来 | `journalctl -u frp-p2p-lan-easytier -n 50` |
+| 下载失败 | 脚本内置 4 个国内镜像自动切换；仍失败手动放 release 到 `/opt/frp-p2p-lan/bin/` |
 | Windows 客户端异常 | 右键以管理员身份运行（EasyTier 要建虚拟网卡） |
 | 延迟高 | P2P 没打成走中转：确认 11020 UDP 放行，或换服务器地域 |
 | 想重装/卸载 | 重发同一条命令（幂等）；卸载：`curl -fsSL .../server/install.sh \| sudo bash -s -- --uninstall` |

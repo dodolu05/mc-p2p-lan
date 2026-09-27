@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""mc-p2p-lan 联机管理面板 (仪表舱版)"""
+"""frp-p2p-lan 联机管理面板 (仪表舱版)"""
 import subprocess, json, os, re, socket, time, ipaddress
 from datetime import datetime
 from flask import Flask, request, redirect, url_for, session, render_template_string, jsonify
 
-# ===== mc-p2p-lan 通用化配置（原私有实例已改为环境变量驱动）=====
+# ===== frp-p2p-lan 通用化配置（原私有实例已改为环境变量驱动）=====
 import secrets as _secrets
-INSTALL_DIR = os.environ.get("PANEL_DIR", "/opt/mc-p2p-lan")
+INSTALL_DIR = os.environ.get("PANEL_DIR", "/opt/frp-p2p-lan")
 LAN_IP      = os.environ.get("PANEL_HOST", "127.0.0.1")
 LAN_NET     = os.environ.get("PANEL_TRUST_NET", ".".join(LAN_IP.split(".")[:3]) + ".0/24")
 PANEL_PORT  = int(os.environ.get("PANEL_PORT", "8080"))
 PUB_IP      = os.environ.get("PANEL_PUB_IP", "")
 FRPS_TOML   = os.environ.get("FRPS_TOML", os.path.join(INSTALL_DIR, "etc", "frps.toml"))
-LOG_UNIT    = os.environ.get("PANEL_LOG_UNIT", "mc-p2p-lan-easytier")
+LOG_UNIT    = os.environ.get("PANEL_LOG_UNIT", "frp-p2p-lan-easytier")
 # =================================================================
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("PANEL_SECRET") or _secrets.token_hex(32)
-ADMIN_PWD = os.environ.get("PANEL_PWD", "mc-p2p-lan")
+ADMIN_PWD = os.environ.get("PANEL_PWD", "frp-p2p-lan")
 
 # 免密直达：只信 TCP 真实源 IP（request.remote_addr），绝不读 X-Forwarded-For。
 # 本服务前面没有反向代理，remote_addr 即真实对端，无法伪造。
-# 127/8 = 本机；LAN_NET = mc-p2p-lan 虚拟局域网网段。
+# 127/8 = 本机；LAN_NET = frp-p2p-lan 虚拟局域网网段。
 TRUSTED_NETS = tuple(ipaddress.ip_network(c) for c in ("127.0.0.0/8", LAN_NET))
 
 def trusted_peer():
@@ -41,9 +41,9 @@ def authed():
     return trusted_peer()
 
 SERVICES = [
-    ("mc-p2p-lan-easytier", "EasyTier 虚拟局域网", "easytier"),
-    ("mc-p2p-lan-frps", "frp 内网穿透", "frp"),
-    ("mc-p2p-lan-panel", "联机管理面板", "panel"),
+    ("frp-p2p-lan-easytier", "EasyTier 虚拟局域网", "easytier"),
+    ("frp-p2p-lan-frps", "frp 内网穿透", "frp"),
+    ("frp-p2p-lan-panel", "联机管理面板", "panel"),
 ]
 
 LINKS = [

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  mc-p2p-lan / 服务端一键部署脚本
+#  frp-p2p-lan / 服务端一键部署脚本
 #  在一台有公网 IP 的云服务器上部署：
 #    * EasyTier 虚拟局域网节点（P2P 打洞 + 中继，游戏联机主力）
 #    * frps 内网穿透服务端（打洞失败时的兜底）
@@ -15,10 +15,10 @@ set -euo pipefail
 
 ET_VERSION="${ET_VERSION:-2.6.4}"
 FRP_VERSION="${FRP_VERSION:-0.71.0}"
-REPO="${REPO:-dodolu05/mc-p2p-lan}"
+REPO="${REPO:-dodolu05/frp-p2p-lan}"
 BRANCH="${BRANCH:-main}"
 
-INSTALL_DIR="${INSTALL_DIR:-/opt/mc-p2p-lan}"
+INSTALL_DIR="${INSTALL_DIR:-/opt/frp-p2p-lan}"
 ET_PORT="${ET_PORT:-11020}"
 FRP_BIND_PORT="${FRP_BIND_PORT:-7000}"
 FRP_DASH_PORT="${FRP_DASH_PORT:-7500}"
@@ -62,8 +62,8 @@ done
 
 # ---------- 卸载 ----------
 if [ "$UNINSTALL" = 1 ]; then
-  h1 "卸载 mc-p2p-lan"
-  for s in mc-p2p-lan-easytier mc-p2p-lan-frps; do
+  h1 "卸载 frp-p2p-lan"
+  for s in frp-p2p-lan-easytier frp-p2p-lan-frps; do
     systemctl stop "$s" 2>/dev/null && log "已停止 $s" || true
     systemctl disable "$s" 2>/dev/null || true
     rm -f "/etc/systemd/system/$s.service"
@@ -142,7 +142,7 @@ else
   FRP_TOKEN="$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')"
   FRP_PWD="$(head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n')"
   cat > "$CONF" <<EOF
-# mc-p2p-lan 服务端配置（自动生成，请勿泄露给无关人员）
+# frp-p2p-lan 服务端配置（自动生成，请勿泄露给无关人员）
 NETWORK_NAME="$NETWORK_NAME"
 ET_SECRET="$ET_SECRET"
 ET_PORT="$ET_PORT"
@@ -186,9 +186,9 @@ else
 fi
 
 h1 "4/6 写入 systemd 服务"
-cat > /etc/systemd/system/mc-p2p-lan-easytier.service <<EOF
+cat > /etc/systemd/system/frp-p2p-lan-easytier.service <<EOF
 [Unit]
-Description=mc-p2p-lan EasyTier Node ($NETWORK_NAME)
+Description=frp-p2p-lan EasyTier Node ($NETWORK_NAME)
 After=network.target
 
 [Service]
@@ -216,9 +216,9 @@ webServer.password = "$FRP_PWD"
 EOF
   chmod 600 "$INSTALL_DIR/etc/frps.toml"
 
-  cat > /etc/systemd/system/mc-p2p-lan-frps.service <<EOF
+  cat > /etc/systemd/system/frp-p2p-lan-frps.service <<EOF
 [Unit]
-Description=mc-p2p-lan frps
+Description=frp-p2p-lan frps
 After=network.target
 
 [Service]
@@ -235,8 +235,8 @@ EOF
 fi
 
 systemctl daemon-reload
-systemctl enable --now mc-p2p-lan-easytier >/dev/null 2>&1 && ok "EasyTier 已启动并设置开机自启"
-[ "$INSTALL_FRP" = 1 ] && { systemctl enable --now mc-p2p-lan-frps >/dev/null 2>&1 && ok "frps 已启动并设置开机自启"; }
+systemctl enable --now frp-p2p-lan-easytier >/dev/null 2>&1 && ok "EasyTier 已启动并设置开机自启"
+[ "$INSTALL_FRP" = 1 ] && { systemctl enable --now frp-p2p-lan-frps >/dev/null 2>&1 && ok "frps 已启动并设置开机自启"; }
 
 h1 "5/6 部署管理面板（联机管理台 + frp 面板）"
 PANEL_OK=0
@@ -260,9 +260,9 @@ PANEL_PWD="$PANEL_PWD"
 PANEL_SECRET="$PANEL_SECRET"
 EOF
       LAN_NET="${ET_VIP%.*}.0/24"
-      cat > /etc/systemd/system/mc-p2p-lan-panel.service <<EOF
+      cat > /etc/systemd/system/frp-p2p-lan-panel.service <<EOF
 [Unit]
-Description=mc-p2p-lan 联机管理台
+Description=frp-p2p-lan 联机管理台
 After=network.target
 
 [Service]
@@ -280,9 +280,9 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-      cat > /etc/systemd/system/mc-p2p-lan-frppanel.service <<EOF
+      cat > /etc/systemd/system/frp-p2p-lan-frppanel.service <<EOF
 [Unit]
-Description=mc-p2p-lan frp 面板
+Description=frp-p2p-lan frp 面板
 After=network.target
 
 [Service]
@@ -302,8 +302,8 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
       systemctl daemon-reload
-      systemctl enable --now mc-p2p-lan-panel     >/dev/null 2>&1 && ok "联机管理台已启动 (8080)"
-      systemctl enable --now mc-p2p-lan-frppanel  >/dev/null 2>&1 && ok "frp 面板已启动 (8090)"
+      systemctl enable --now frp-p2p-lan-panel     >/dev/null 2>&1 && ok "联机管理台已启动 (8080)"
+      systemctl enable --now frp-p2p-lan-frppanel  >/dev/null 2>&1 && ok "frp 面板已启动 (8090)"
       PANEL_OK=1
     else
       warn "Flask 不可用，跳过面板部署（联机功能不受影响）"
@@ -316,9 +316,9 @@ fi
 h1 "6/6 验证"
 sleep 3
 ET_OK=0
-systemctl is-active --quiet mc-p2p-lan-easytier && { ok "EasyTier: active"; ET_OK=1; } || warn "EasyTier 未起来，看日志: journalctl -u mc-p2p-lan-easytier -n 50"
+systemctl is-active --quiet frp-p2p-lan-easytier && { ok "EasyTier: active"; ET_OK=1; } || warn "EasyTier 未起来，看日志: journalctl -u frp-p2p-lan-easytier -n 50"
 if [ "$INSTALL_FRP" = 1 ]; then
-  systemctl is-active --quiet mc-p2p-lan-frps && ok "frps: active" || warn "frps 未起来，看日志: journalctl -u mc-p2p-lan-frps -n 50"
+  systemctl is-active --quiet frp-p2p-lan-frps && ok "frps: active" || warn "frps 未起来，看日志: journalctl -u frp-p2p-lan-frps -n 50"
 fi
 
 JOIN_URL="${RAW_BASE}/client/join-linux.sh"
@@ -328,7 +328,7 @@ ET_PEER="tcp://${PUBIP:-<服务器IP>}:$ET_PORT"
 
 CARD="$INSTALL_DIR/connect.txt"
 {
-echo "================= mc-p2p-lan 联机邀请卡 ==================="
+echo "================= frp-p2p-lan 联机邀请卡 ==================="
 echo "生成时间: $(date '+%F %T')"
 echo
 echo "拿这张卡发给朋友 —— 他们全程只填 3 个框，不用敲任何命令"

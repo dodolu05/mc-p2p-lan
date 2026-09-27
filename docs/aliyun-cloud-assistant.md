@@ -1,4 +1,4 @@
-# 房主不用 SSH：在云厂商网页控制台里部署 mc-p2p-lan
+# 房主不用 SSH：在云厂商网页控制台里部署 frp-p2p-lan
 
 新手最怕的就是「进服务器敲命令」这一步。其实这一步也可以完全在网页上完成——
 阿里云 / 腾讯云 / 华为云的控制台都能直接往你的服务器发一条命令执行，**不需要 SSH、不需要 root 密码**。
@@ -16,7 +16,7 @@
 5. 命令内容粘贴这一行：
 
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/server/install.sh | sudo bash
+   curl -fsSL https://raw.githubusercontent.com/dodolu05/frp-p2p-lan/main/server/install.sh | sudo bash
    ```
 
 6. 点 **执行**，等 2~3 分钟，输出里就会打出「联机邀请卡」
@@ -76,6 +76,6 @@
 | 现象 | 处理 |
 |---|---|
 | 命令助手显示 Agent 离线 | 在云助手页面点「安装 Agent」，装完重试；或改用 SSH 方式 |
-| 执行超时/没输出 | 超时时间调到 600 秒；输出可能被截断，可改看 `/opt/mc-p2p-lan/connect.txt`（用网页自带的「发送文件/查看文件」或 VNC 登录看） |
+| 执行超时/没输出 | 超时时间调到 600 秒；输出可能被截断，可改看 `/opt/frp-p2p-lan/connect.txt`（用网页自带的「发送文件/查看文件」或 VNC 登录看） |
 | 想重装 | 重新发一次同一条命令即可（脚本幂等）；卸载是把命令换成 `curl -fsSL .../server/install.sh | sudo bash -s -- --uninstall`，再发一次 |
-| 想看运行状态 | 服务器 → 远程登录（网页版 VNC）→ 执行 `systemctl status mc-p2p-lan-easytier` |
+| 想看运行状态 | 服务器 → 远程登录（网页版 VNC）→ 执行 `systemctl status frp-p2p-lan-easytier` |

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 frp 隧道管理面板 - 兜兜卢专用（樱花 frp 式）
-只监听虚拟局域网 IP（不绑 0.0.0.0），无需 iptables 白名单，公网不可达。原实现曾 easytier 双网段（LAN_NET (mc-p2p-lan 虚拟局域网)）+ 本机，公网不可达
+只监听虚拟局域网 IP（不绑 0.0.0.0），无需 iptables 白名单，公网不可达。原实现曾 easytier 双网段（LAN_NET (frp-p2p-lan 虚拟局域网)）+ 本机，公网不可达
 功能: 隧道 CRUD / frpc 配置一键生成 / frps 服务控制 / 爆破监控 / 操作审计
 安全: 密码存文件(chmod 600) / 登录限流 / 动作白名单 / 审计留痕 / token 仅入下载文件不进页面
 """
@@ -17,9 +17,9 @@ import uuid
 from datetime import timedelta
 from threading import Lock
 
-# ===== mc-p2p-lan 通用化配置（原私有实例已改为环境变量驱动）=====
+# ===== frp-p2p-lan 通用化配置（原私有实例已改为环境变量驱动）=====
 import secrets as _secrets
-INSTALL_DIR = os.environ.get("PANEL_DIR", "/opt/mc-p2p-lan")
+INSTALL_DIR = os.environ.get("PANEL_DIR", "/opt/frp-p2p-lan")
 LAN_IP      = os.environ.get("PANEL_HOST", "127.0.0.1")
 LAN_NET     = os.environ.get("PANEL_TRUST_NET", ".".join(LAN_IP.split(".")[:3]) + ".0/24")
 PANEL_PORT  = int(os.environ.get("PANEL_PORT", "8080"))
@@ -210,7 +210,7 @@ def peer_ip():
 
 def is_trusted_peer():
     """虚拟局域网免密：源 IP 落在 TRUSTED_NETS 即信任。
-    默认 127.0.0.1/8（本机管理）+ LAN_NET（mc-p2p-lan 虚拟局域网）；公网不信任。"""
+    默认 127.0.0.1/8（本机管理）+ LAN_NET（frp-p2p-lan 虚拟局域网）；公网不信任。"""
     try:
         addr = ipaddress.ip_address(peer_ip())
     except Exception:
@@ -2268,7 +2268,7 @@ body.dark .top-exit-m:hover {
     </span>
     <span><span class="grad">frp 面板</span><small class="brand-sub">Sakura tunnel studio</small></span>
   </div>
-  <div class="side-status"><div><span class="dot"></span><b>节点在线</b></div><small>frps · 7000</small><div class="network-row"><span>mc-p2p-lan</span></div></div>
+  <div class="side-status"><div><span class="dot"></span><b>节点在线</b></div><small>frps · 7000</small><div class="network-row"><span>frp-p2p-lan</span></div></div>
   <nav id="navd">
     <a href="#v-overview" class="on" data-v="v-overview" onclick="sw(this);return false">概览</a>
     <a href="#v-tunnels" data-v="v-tunnels" onclick="sw(this);return false">隧道管理</a>

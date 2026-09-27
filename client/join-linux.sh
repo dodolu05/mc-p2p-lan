@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  mc-p2p-lan / Linux & macOS 客户端一键加入
+#  frp-p2p-lan / Linux & macOS 客户端一键加入
 #  用法:
 #    curl -fsSL <RAW>/client/join-linux.sh | sudo bash -s -- \
 #        --name "<网络名>" --secret "<密钥>" --peer "tcp://1.2.3.4:11020"
@@ -11,9 +11,9 @@ set -euo pipefail
 
 NAME=""; SECRET=""; PEER=""; VIP=""
 ET_VERSION="${ET_VERSION:-2.6.4}"
-DIR="${DIR:-/opt/mc-p2p-lan-client}"
+DIR="${DIR:-/opt/frp-p2p-lan-client}"
 GH="https://github.com"
-SVC="mc-p2p-lan-client"
+SVC="frp-p2p-lan-client"
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -73,7 +73,7 @@ ARGS="--network-name \"$NAME\" --network-secret \"$SECRET\" -e \"$PEER\""
 [ -n "$VIP" ] && ARGS="$ARGS -i $VIP"
 cat > "/etc/systemd/system/$SVC.service" <<EOF
 [Unit]
-Description=mc-p2p-lan EasyTier Client ($NAME)
+Description=frp-p2p-lan EasyTier Client ($NAME)
 After=network.target
 
 [Service]

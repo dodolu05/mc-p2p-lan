@@ -1,10 +1,10 @@
 # =============================================================================
-#  mc-p2p-lan / Windows client one-click join
+#  frp-p2p-lan / Windows client one-click join
 #  (This file is intentionally kept pure ASCII: Windows PowerShell 5.1 reads
 #   BOM-less UTF-8 as ANSI/GBK and would corrupt non-ASCII strings.)
 #
 #  Usage 1 (recommended, for AI tools) - run in an ADMIN PowerShell:
-#     iex (irm https://raw.githubusercontent.com/dodolu05/mc-p2p-lan/main/client/join-windows.ps1)
+#     iex (irm https://raw.githubusercontent.com/dodolu05/frp-p2p-lan/main/client/join-windows.ps1)
 #     Join-Lan -Name "<network>" -Secret "<secret>" -Peer "tcp://1.2.3.4:11020"
 #
 #  Usage 2 (run the file directly):
@@ -25,7 +25,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Base = "$env:LOCALAPPDATA\mc-p2p-lan"
+$Base = "$env:LOCALAPPDATA\frp-p2p-lan"
 $Bin  = "$Base\bin"
 
 function Write-Log { param($m) Write-Host "[..] $m" -ForegroundColor Cyan }
@@ -198,6 +198,6 @@ if ($Uninstall) {
 if ($Name -and $Secret -and $Peer) {
     Join-Lan -Name $Name -Secret $Secret -Peer $Peer -Ip $Ip -Version $Version
 } else {
-    Write-Host "mc-p2p-lan client loaded. To join a network run:" -ForegroundColor Yellow
+    Write-Host "frp-p2p-lan client loaded. To join a network run:" -ForegroundColor Yellow
     Write-Host '  Join-Lan -Name "<network>" -Secret "<secret>" -Peer "tcp://SERVER_IP:11020"' -ForegroundColor White
 }

@@ -78,8 +78,12 @@ function Join-Lan {
     Write-Host "=== 1/3 prepare ===" -ForegroundColor White
     New-Item -ItemType Directory -Force -Path $Bin | Out-Null
 
-    $exe = Join-Path $Bin 'easytier-core.exe'
-    if (-not (Test-Path $exe)) {
+    # The zip extracts into a subfolder (easytier-windows-x86_64/),
+    # so always search recursively instead of assuming $bin\easytier-core.exe
+    $exe = (Get-ChildItem -Path $Bin -Filter 'easytier-core.exe' -Recurse -ErrorAction SilentlyContinue |
+            Select-Object -First 1).FullName
+
+    if (-not $exe) {
         Write-Log "downloading EasyTier v$Version ..."
         $zip = Join-Path $env:TEMP "et.zip"
         $url = "https://github.com/EasyTier/EasyTier/releases/download/v$Version/easytier-windows-x86_64-v$Version.zip"
@@ -90,9 +94,17 @@ function Join-Lan {
         Expand-Archive -Path $zip -DestinationPath $Bin -Force
         Remove-Item $zip -Force -ErrorAction SilentlyContinue
         Write-Ok "extracted to $Bin"
+
+        $exe = (Get-ChildItem -Path $Bin -Filter 'easytier-core.exe' -Recurse -ErrorAction SilentlyContinue |
+                Select-Object -First 1).FullName
+        if (-not $exe) {
+            Write-Err "easytier-core.exe not found after extraction"
+            return
+        }
     } else {
         Write-Ok "EasyTier already installed, skip download"
     }
+    Write-Log "binary: $exe"
 
     Write-Host ""
     Write-Host "=== 2/3 join virtual LAN ===" -ForegroundColor White

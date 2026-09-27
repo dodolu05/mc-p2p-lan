@@ -25,6 +25,7 @@ FRP_DASH_PORT="${FRP_DASH_PORT:-7500}"
 ET_VIP="${ET_VIP:-10.145.0.1}"
 NETWORK_NAME="${NETWORK_NAME:-}"
 INSTALL_FRP="${INSTALL_FRP:-1}"
+INSTALL_PANEL="${INSTALL_PANEL:-1}"
 FORCE=0
 UNINSTALL=0
 
@@ -51,6 +52,7 @@ while [ $# -gt 0 ]; do
     --frp-port) FRP_BIND_PORT="$2"; shift 2;;
     --vip) ET_VIP="$2"; shift 2;;
     --no-frp) INSTALL_FRP=0; shift;;
+    --no-panel) INSTALL_PANEL=0; shift;;
     --force) FORCE=1; shift;;
     --uninstall) UNINSTALL=1; shift;;
     -h|--help) sed -n '2,20p' "$0"; exit 0;;
@@ -126,7 +128,7 @@ check_port() {
 }
 
 # ---------- 主流程 ----------
-h1 "1/5 准备目录与配置"
+h1 "1/6 准备目录与配置"
 mkdir -p "$INSTALL_DIR"/{bin,etc,log}
 CONF="$INSTALL_DIR/etc/env.conf"
 
@@ -156,7 +158,7 @@ fi
 # shellcheck disable=SC1090
 . "$CONF"
 
-h1 "2/5 下载 EasyTier v${ET_VERSION}"
+h1 "2/6 下载 EasyTier v${ET_VERSION}"
 if [ ! -x "$INSTALL_DIR/bin/easytier-core" ] || [ "$FORCE" = 1 ]; then
   TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
   dl "$GH/EasyTier/EasyTier/releases/download/v${ET_VERSION}/easytier-linux-${ET_ARCH}-v${ET_VERSION}.zip" "$TMP/et.zip"
@@ -169,7 +171,7 @@ fi
 "$INSTALL_DIR/bin/easytier-core" --version 2>/dev/null | head -1 || true
 
 if [ "$INSTALL_FRP" = 1 ]; then
-  h1 "3/5 下载 frp v${FRP_VERSION}"
+  h1 "3/6 下载 frp v${FRP_VERSION}"
   if [ ! -x "$INSTALL_DIR/bin/frps" ] || [ "$FORCE" = 1 ]; then
     TMP2="$(mktemp -d)"
     dl "$GH/fatedier/frp/releases/download/v${FRP_VERSION}/frp_${FRP_VERSION}_linux_${FRP_ARCH}.tar.gz" "$TMP2/frp.tgz"
@@ -180,10 +182,10 @@ if [ "$INSTALL_FRP" = 1 ]; then
     ok "frps 已存在，跳过"
   fi
 else
-  log "3/5 跳过 frp（--no-frp）"
+  log "3/6 跳过 frp（--no-frp）"
 fi
 
-h1 "4/5 写入 systemd 服务"
+h1 "4/6 写入 systemd 服务"
 cat > /etc/systemd/system/mc-p2p-lan-easytier.service <<EOF
 [Unit]
 Description=mc-p2p-lan EasyTier Node ($NETWORK_NAME)
@@ -236,7 +238,82 @@ systemctl daemon-reload
 systemctl enable --now mc-p2p-lan-easytier >/dev/null 2>&1 && ok "EasyTier 已启动并设置开机自启"
 [ "$INSTALL_FRP" = 1 ] && { systemctl enable --now mc-p2p-lan-frps >/dev/null 2>&1 && ok "frps 已启动并设置开机自启"; }
 
-h1 "5/5 验证"
+h1 "5/6 部署管理面板（联机管理台 + frp 面板）"
+PANEL_OK=0
+if [ "$INSTALL_PANEL" = 1 ]; then
+  if ! command -v python3 >/dev/null 2>&1; then
+    warn "没有 python3，跳过面板部署（联机功能不受影响）"
+  else
+    if ! python3 -c "import flask" >/dev/null 2>&1; then
+      log "安装 Flask（先用清华源，失败退回官方源）..."
+      (pip3 install -q flask -i https://pypi.tuna.tsinghua.edu.cn/simple 2>&1 | tail -2 || \
+       pip3 install -q flask 2>&1 | tail -2) || warn "Flask 安装失败"
+    fi
+    if python3 -c "import flask" >/dev/null 2>&1; then
+      mkdir -p "$INSTALL_DIR/panel"
+      dl "$RAW_BASE/panel/admin_panel.py" "$INSTALL_DIR/panel/admin_panel.py"
+      dl "$RAW_BASE/panel/frp_panel.py"   "$INSTALL_DIR/panel/frp_panel.py"
+      PANEL_PWD="$(head -c 6 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+      PANEL_SECRET="$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+      cat >> "$CONF" <<EOF
+PANEL_PWD="$PANEL_PWD"
+PANEL_SECRET="$PANEL_SECRET"
+EOF
+      LAN_NET="${ET_VIP%.*}.0/24"
+      cat > /etc/systemd/system/mc-p2p-lan-panel.service <<EOF
+[Unit]
+Description=mc-p2p-lan 联机管理台
+After=network.target
+
+[Service]
+Type=simple
+Environment=PANEL_DIR=$INSTALL_DIR
+Environment=PANEL_HOST=$ET_VIP
+Environment=PANEL_PORT=8080
+Environment=PANEL_TRUST_NET=$LAN_NET
+Environment=PANEL_PWD=$PANEL_PWD
+Environment=PANEL_SECRET=$PANEL_SECRET
+ExecStart=/usr/bin/python3 $INSTALL_DIR/panel/admin_panel.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+      cat > /etc/systemd/system/mc-p2p-lan-frppanel.service <<EOF
+[Unit]
+Description=mc-p2p-lan frp 面板
+After=network.target
+
+[Service]
+Type=simple
+Environment=PANEL_DIR=$INSTALL_DIR
+Environment=PANEL_HOST=$ET_VIP
+Environment=PANEL_PORT=8090
+Environment=PANEL_TRUST_NET=$LAN_NET
+Environment=PANEL_PWD=$PANEL_PWD
+Environment=PANEL_PUB_IP=$PUBIP
+Environment=FRPS_TOML=$INSTALL_DIR/etc/frps.toml
+ExecStart=/usr/bin/python3 $INSTALL_DIR/panel/frp_panel.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+      systemctl daemon-reload
+      systemctl enable --now mc-p2p-lan-panel     >/dev/null 2>&1 && ok "联机管理台已启动 (8080)"
+      systemctl enable --now mc-p2p-lan-frppanel  >/dev/null 2>&1 && ok "frp 面板已启动 (8090)"
+      PANEL_OK=1
+    else
+      warn "Flask 不可用，跳过面板部署（联机功能不受影响）"
+    fi
+  fi
+else
+  log "5/6 跳过面板（--no-panel）"
+fi
+
+h1 "6/6 验证"
 sleep 3
 ET_OK=0
 systemctl is-active --quiet mc-p2p-lan-easytier && { ok "EasyTier: active"; ET_OK=1; } || warn "EasyTier 未起来，看日志: journalctl -u mc-p2p-lan-easytier -n 50"
@@ -266,6 +343,15 @@ echo "frps 端口     : $FRP_BIND_PORT"
 echo "frp 令牌      : $FRP_TOKEN"
 else
 echo "（未安装 frp）"
+fi
+echo
+echo "--- 管理面板（只绑虚拟局域网 IP，公网访问不到）---"
+if [ "$PANEL_OK" = 1 ]; then
+echo "联机管理台  : http://$ET_VIP:8080   口令: $PANEL_PWD"
+echo "frp 面板    : http://$ET_VIP:8090   口令: $PANEL_PWD"
+echo "（先加入虚拟局域网，再用浏览器开上面地址；局域网内免密）"
+else
+echo "（未部署：缺 python3/Flask。修好后重跑本脚本即可补装）"
 fi
 echo
 echo "--- 给朋友的一键加入命令 ---"

@@ -4,3 +4,5 @@ connect.txt
 *.log.err
 .DS_Store
 Thumbs.db
+__pycache__/
+*.pyc

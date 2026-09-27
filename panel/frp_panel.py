@@ -1,4 +1,4 @@
-#!/opt/searxng/venv/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 frp 隧道管理面板 - 兜兜卢专用（樱花 frp 式）
@@ -65,10 +65,9 @@ PRESET_PORTS = [
 
 # frps 服务器上实际在听的端口 → 用途（远程端口撞这些会被 frps 拒绝/冲突）
 SYSTEM_PORTS = {
-    22: "SSH", 3010: "qqbot", 6099: "NapCat", 5244: "Alist 网盘",
-    6080: "noVNC", 7000: "frps 主端口", 7500: "frps 面板",
-    8090: "frp 管理面板", 6379: "valkey(Redis)", 8080: "admin 后台",
-    8088: "文件下载服", 8888: "SearXNG",
+    22: "SSH", 7000: "frps 主端口", 7500: "frps 面板",
+    11020: "EasyTier 节点", 8080: "联机管理台", 8090: "frp 面板",
+    25565: "Minecraft",
 }
 
 # 免密信任网段：虚拟局域网内免密登录（公网仍需密码）

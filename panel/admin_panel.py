@@ -1,4 +1,4 @@
-#!/opt/searxng/venv/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """mc-p2p-lan 联机管理面板 (仪表舱版)"""
 import subprocess, json, os, re, socket, time, ipaddress
@@ -13,6 +13,7 @@ LAN_NET     = os.environ.get("PANEL_TRUST_NET", ".".join(LAN_IP.split(".")[:3]) 
 PANEL_PORT  = int(os.environ.get("PANEL_PORT", "8080"))
 PUB_IP      = os.environ.get("PANEL_PUB_IP", "")
 FRPS_TOML   = os.environ.get("FRPS_TOML", os.path.join(INSTALL_DIR, "etc", "frps.toml"))
+LOG_UNIT    = os.environ.get("PANEL_LOG_UNIT", "mc-p2p-lan-easytier")
 # =================================================================
 
 app = Flask(__name__)
@@ -169,7 +170,7 @@ def services_status(names):
     return dict(zip(names, lines))
 
 def recent_logs(n=30):
-    return sh(f"journalctl -u qqbot.service -n {n} --no-pager -o cat")
+    return sh(f"journalctl -u {LOG_UNIT}.service -n {n} --no-pager -o cat")
 
 def last_logins(n=10):
     return sh(f"last -n {n} -a | grep -v wtmp")
@@ -706,7 +707,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(-
 {% else %}
 <a class="skip" href="#main">跳到主内容</a>
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
-  <symbol id="i-qqbot" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4.4" y="6.8" width="11.2" height="8.4" rx="2.4"/><path d="M10 6.8V4.1"/><circle cx="10" cy="3.2" r="0.9"/><path d="M8.1 10.4v1.5"/><path d="M11.9 10.4v1.5"/><path d="M8.4 13.4h3.2"/></symbol>
+  <symbol id="i-bot" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4.4" y="6.8" width="11.2" height="8.4" rx="2.4"/><path d="M10 6.8V4.1"/><circle cx="10" cy="3.2" r="0.9"/><path d="M8.1 10.4v1.5"/><path d="M11.9 10.4v1.5"/><path d="M8.4 13.4h3.2"/></symbol>
   <symbol id="i-frp" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 10h11.9"/><path d="M13.6 8.3 15.4 10l-1.8 1.7"/><path d="M12.4 3.1v4.5"/><path d="M12.4 12.4v4.5"/></symbol>
   <symbol id="i-easytier" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="4.9" r="1.7"/><circle cx="4.9" cy="13.2" r="1.7"/><circle cx="15.1" cy="13.2" r="1.7"/><path d="M9.2 6.3 5.7 11.9"/><path d="M10.8 6.3 14.3 11.9"/><path d="M6.6 13.2h6.8"/></symbol>
   <symbol id="i-gaming" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.9" y="7.4" width="14.2" height="7.6" rx="3.6"/><path d="M6.4 9.9v2.6"/><path d="M5.1 11.2h2.6"/><circle cx="13.2" cy="10.4" r="0.55" fill="currentColor" stroke="none"/><circle cx="14.7" cy="12" r="0.55" fill="currentColor" stroke="none"/></symbol>
@@ -853,11 +854,11 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(-
   <!-- 日志 -->
   <section class="panel" id="logs" role="tabpanel" aria-labelledby="tb-logs">
     <div class="card">
-      <div class="chead"><h2>QQ机器人日志</h2><span class="cnote">tail 30 · 15s</span></div>
+      <div class="chead"><h2>服务日志</h2><span class="cnote">tail 30 · 15s</span></div>
       <div class="cbody">
         <div class="term">
-          <div class="tbar"><span class="tdot r"></span><span class="tdot y"></span><span class="tdot g"></span><span class="tt">journalctl -u qqbot</span><span class="rt" id="log-meta">{{s.logs|length}} 行</span></div>
-          <div class="log" id="log-box" role="log" aria-label="QQ机器人最近日志">
+          <div class="tbar"><span class="tdot r"></span><span class="tdot y"></span><span class="tdot g"></span><span class="tt">journalctl -u 服务</span><span class="rt" id="log-meta">{{s.logs|length}} 行</span></div>
+          <div class="log" id="log-box" role="log" aria-label="服务最近日志">
             {% for ln, ts, sev, msg in s.logs %}
             <div class="log-row">
               <span class="ln">{{ln}}</span>
@@ -866,7 +867,7 @@ a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(-
               <span class="msg">{{msg}}</span>
             </div>
             {% else %}
-            <div class="log-empty">暂无日志输出 · qqbot 可能刚启动</div>
+            <div class="log-empty">暂无日志输出 · 服务可能刚启动</div>
             {% endfor %}
           </div>
         </div>

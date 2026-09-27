@@ -6,3 +6,10 @@ connect.txt
 Thumbs.db
 __pycache__/
 *.pyc
+# 视频制作产物（源动画除外）
+video/frames/
+video/qc/
+video/vo/
+*.mp4
+*.mp3
+*.wav

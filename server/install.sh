@@ -323,27 +323,58 @@ fi
 
 JOIN_URL="${RAW_BASE}/client/join-linux.sh"
 JOIN_WIN="${RAW_BASE}/client/join-windows.ps1"
+GUIDE_URL="${RAW_BASE}/main/GUIDE_FOR_PLAYERS.md"
+ET_PEER="tcp://${PUBIP:-<服务器IP>}:$ET_PORT"
 
 CARD="$INSTALL_DIR/connect.txt"
 {
-echo "================= mc-p2p-lan 联机信息卡 ================="
+echo "================= mc-p2p-lan 联机邀请卡 ==================="
 echo "生成时间: $(date '+%F %T')"
-echo "服务器公网 IP : ${PUBIP:-<手动填写>}"
 echo
-echo "--- EasyTier 虚拟局域网（推荐，P2P 直连延迟低）---"
-echo "网络名称      : $NETWORK_NAME"
-echo "网络密钥      : $ET_SECRET"
-echo "接入地址      : tcp://${PUBIP:-<服务器IP>}:$ET_PORT"
-echo "服务器虚拟 IP : $ET_VIP"
-echo "朋友可用网段  : ${ET_VIP%.*}.2 ~ ${ET_VIP%.*}.254"
+echo "拿这张卡发给朋友 —— 他们全程只填 3 个框，不用敲任何命令"
+echo "---------------------------------------------------------"
+echo "第 1 步  下载 EasyTier 客户端（选自己系统的版本）"
+echo "         https://easytier.cn/guide/download.html"
+echo "         Windows / macOS / Linux / Android 都有"
 echo
-echo "--- frp 穿透（打洞失败时的兜底）---"
+echo "第 2 步  打开客户端 -> 添加新网络，依次填："
+echo "         网络名称  : $NETWORK_NAME"
+echo "         网络密码  : $ET_SECRET"
+echo "         公共服务器 / 中继地址 : $ET_PEER"
+echo "         （虚拟 IP 一栏选 DHCP / 自动，别手填）"
+echo "         然后点「运行网络」"
+echo
+echo "第 3 步  界面出现自己的虚拟 IP（形如 ${ET_VIP%.*}.x）即成功，"
+echo "         PC 端再打开游戏 -> 多人游戏 -> 局域网，"
+echo "         房主的存档会直接出现在列表里，点进去就联机完成。"
+echo "---------------------------------------------------------"
+echo "房主自己的虚拟 IP : $ET_VIP"
+echo "朋友会拿到的网段  : ${ET_VIP%.*}.2 ~ ${ET_VIP%.*}.254"
+echo
+echo "捞一份更详细的零命令图文指南（可直接转发给朋友）："
+echo "  $GUIDE_URL"
+echo
+echo "--- 打洞不快时，我的世界可用 frp 兜底直连 ---"
 if [ "$INSTALL_FRP" = 1 ]; then
 echo "frps 端口     : $FRP_BIND_PORT"
-echo "frp 令牌      : $FRP_TOKEN"
+echo "MC 直接连接地址 : ${PUBIP:-<服务器IP>}   端口见 frp 面板里 25565 映射"
+echo "（frp 面板只连虚拟局域网才能开：http://$ET_VIP:8090）"
 else
-echo "（未安装 frp）"
+echo "（本次未安装 frp，打洞失败就没有兜底通道）"
 fi
+echo
+echo "============== 以下仅供房主排障，不用发给朋友 =============="
+echo "--- EasyTier 参数 ---"
+echo "网络名称      : $NETWORK_NAME"
+echo "网络密钥      : $ET_SECRET"
+echo "接入地址      : $ET_PEER"
+echo "服务器虚拟 IP : $ET_VIP"
+echo
+echo "--- 命令行加入（可选，给爱折腾的朋友）---"
+echo "Linux/macOS:"
+echo "  curl -fsSL $JOIN_URL | sudo bash -s -- --name '$NETWORK_NAME' --secret '$ET_SECRET' --peer '$ET_PEER'"
+echo "Windows (PowerShell 管理员):"
+echo "  iex (irm $JOIN_WIN); Join-Lan -Name '$NETWORK_NAME' -Secret '$ET_SECRET' -Peer '$ET_PEER'"
 echo
 echo "--- 管理面板（只绑虚拟局域网 IP，公网访问不到）---"
 if [ "$PANEL_OK" = 1 ]; then
@@ -354,19 +385,13 @@ else
 echo "（未部署：缺 python3/Flask。修好后重跑本脚本即可补装）"
 fi
 echo
-echo "--- 给朋友的一键加入命令 ---"
-echo "Linux/macOS:"
-echo "  curl -fsSL $JOIN_URL | sudo bash -s -- --name '$NETWORK_NAME' --secret '$ET_SECRET' --peer 'tcp://${PUBIP:-<服务器IP>}:$ET_PORT'"
-echo "Windows (PowerShell 管理员):"
-echo "  iex (irm $JOIN_WIN); Join-Lan -Name '$NETWORK_NAME' -Secret '$ET_SECRET' -Peer 'tcp://${PUBIP:-<服务器IP>}:$ET_PORT'"
-echo
 echo "--- 需要在云厂商安全组/防火墙放行的端口 ---"
-echo "  TCP+UDP $ET_PORT   (EasyTier)"
+echo "  TCP+UDP $ET_PORT   (EasyTier，必放)"
 [ "$INSTALL_FRP" = 1 ] && echo "  TCP $FRP_BIND_PORT  (frps)"
 echo "  TCP 25565 等        (frp 映射出去的游戏端口，按需)"
-echo "======================================================="
+echo "============================================================="
 } | tee "$CARD"
 chmod 600 "$CARD"
 
 echo
-[ "$ET_OK" = 1 ] && ok "部署完成！把上面这张卡里的信息发给朋友就能联机。" || die "部署未完成，请按上面的提示看日志"
+[ "$ET_OK" = 1 ] && ok "部署完成！把上面这张卡发给朋友就能联机（他们只用填 3 个框）。" || die "部署未完成，请按上面的提示看日志"

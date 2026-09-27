@@ -39,6 +39,16 @@ function Test-Admin {
         [Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
+function Get-FreePort {
+    param([int[]]$Candidates = @(11010, 11011, 11012, 21010, 21011, 21012))
+    foreach ($p in $Candidates) {
+        $tcp = Get-NetTCPConnection -LocalPort $p -ErrorAction SilentlyContinue
+        $udp = Get-NetUDPEndpoint  -LocalPort $p -ErrorAction SilentlyContinue
+        if (-not $tcp -and -not $udp) { return $p }
+    }
+    return 0
+}
+
 function Get-GhFile {
     param([string]$Url, [string]$Out)
     $mirrors = @('', 'https://ghfast.top/', 'https://gh-proxy.com/', 'https://gh.llkk.cc/')
@@ -110,6 +120,18 @@ function Join-Lan {
     Write-Host "=== 2/3 join virtual LAN ===" -ForegroundColor White
     $etArgs = @('--network-name', $Name, '--network-secret', $Secret, '-e', $Peer)
     if ($Ip -ne '') { $etArgs += @('-i', $Ip) }
+
+    # EasyTier defaults to 11010, which collides with an already-running
+    # EasyTier GUI (os error 10048) and the instance exits immediately.
+    # Pick a free port so P2P hole punching still works.
+    $lport = Get-FreePort
+    if ($lport -gt 0) {
+        $etArgs += @('-l', "$lport")
+        Write-Log "listen port: $lport"
+    } else {
+        $etArgs += @('--no-listener')
+        Write-Warn "no free port found, using --no-listener (may fall back to relay)"
+    }
 
     $existing = Get-Process -Name 'easytier-core' -ErrorAction SilentlyContinue
     if ($existing) {
